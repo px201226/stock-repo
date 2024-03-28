@@ -1,0 +1,5 @@
+rootProject.name = 'whatap'
+
+include 'common-module'
+include 'order-module'
+include 'product-module'
