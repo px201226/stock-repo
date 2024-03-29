@@ -1,5 +1,7 @@
-package com.productmodule.domain.model;
+package com.productmodule.domain.product;
 
+import com.productmodule.domain.product.ProductCommand.ProductCreateCommand;
+import com.productmodule.domain.product.ProductCommand.ProductUpdateCommand;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
@@ -22,11 +24,17 @@ public class Product {
 
 	private Long stockQuantity;
 
-	public static Product create(Long id, String name, Long price, Long stockQuantity) {
-		return new Product(id, name, price, stockQuantity);
-	}
-
 	public void decreaseStockQuatity(Long orderQuantity) {
 		this.stockQuantity = this.stockQuantity - orderQuantity;
+	}
+
+	public static Product create(ProductCreateCommand command) {
+		return new Product(null, command.name(), command.price(), command.stockQuantity());
+	}
+
+	public void update(ProductUpdateCommand command) {
+		this.name = command.name();
+		this.price = command.price();
+		this.stockQuantity = command.stockQuantity();
 	}
 }
