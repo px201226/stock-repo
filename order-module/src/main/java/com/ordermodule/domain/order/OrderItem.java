@@ -3,6 +3,7 @@ package com.ordermodule.domain.order;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -19,15 +20,11 @@ import lombok.NoArgsConstructor;
 public class OrderItem {
 
 	@Id
-	@GeneratedValue
-	private Long id;
-
-	private Long itemId;
-
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long orderItemId;
+	private Long productId;
 	private String itemName;
-
 	private Long itemUnitPrice;
-
 	private Long orderQuantity;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -35,4 +32,7 @@ public class OrderItem {
 	private Order order;
 
 
+	public void changeOrderQuantity(Long newQuantity) {
+		this.orderQuantity = newQuantity;
+	}
 }

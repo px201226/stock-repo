@@ -5,7 +5,9 @@ import com.ordermodule.domain.order.OrderCommand.OrderCreateCommand;
 import com.ordermodule.domain.order.OrderCommand.OrderUpdateCommand;
 import com.ordermodule.springboot.dto.OrderViewModel;
 import com.ordermodule.springboot.facade.OrderFacade;
+import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,9 +28,9 @@ public class OrderController {
 
     private final OrderFacade orderFacade;
 
-    @GetMapping("/getOrders")
-    public ResponseEntity<List<OrderViewModel>> getOrders() {
-        List<OrderViewModel> orders = orderFacade.getAllOrders();
+    @GetMapping("/getOrders/{orderIds}")
+    public ResponseEntity<List<OrderViewModel>> getOrders(@PathVariable Set<Long> orderIds) {
+        List<OrderViewModel> orders = orderFacade.getOrders(orderIds);
         return ResponseEntity.ok(orders);
     }
 
@@ -39,13 +41,13 @@ public class OrderController {
     }
 
     @PostMapping("/orderProduct")
-    public ResponseEntity<OrderViewModel> orderProduct(@RequestBody OrderCreateCommand command) {
+    public ResponseEntity<OrderViewModel> orderProduct(@Valid @RequestBody OrderCreateCommand command) {
         OrderViewModel newOrder = orderFacade.placeOrder(command);
         return ResponseEntity.ok(newOrder);
     }
 
     @PutMapping("/changeOrder/{orderId}")
-    public ResponseEntity<OrderViewModel> changeOrder(@PathVariable Long orderId, @RequestBody OrderUpdateCommand command) {
+    public ResponseEntity<OrderViewModel> changeOrder(@PathVariable Long orderId, @Valid @RequestBody OrderUpdateCommand command) {
         OrderViewModel updatedOrder = orderFacade.changeOrder(orderId, command);
         return ResponseEntity.ok(updatedOrder);
     }

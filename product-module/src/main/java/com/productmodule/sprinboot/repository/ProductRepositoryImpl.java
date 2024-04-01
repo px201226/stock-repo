@@ -2,6 +2,8 @@ package com.productmodule.sprinboot.repository;
 
 import com.productmodule.domain.product.Product;
 import com.productmodule.domain.product.ProductRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,5 +31,13 @@ public class ProductRepositoryImpl implements ProductRepository {
 
 	@Override public void delete(Product product) {
 		productJpaRepository.delete(product);
+	}
+
+	@Override public List<Product> findAllById(Collection<Long> productIds) {
+		return productJpaRepository.findAllById(productIds);
+	}
+
+	@Override public List<Product> findAllByIdLock(Collection<Long> productIds) {
+		return productJpaRepository.findAllByIdForUpdate(productIds);
 	}
 }

@@ -4,6 +4,8 @@ import com.commonmodule.dto.product.ProductViewModel;
 import com.productmodule.domain.product.ProductCommand.ProductCreateCommand;
 import com.productmodule.domain.product.ProductCommand.ProductUpdateCommand;
 import com.productmodule.sprinboot.facade.ProductFacade;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,13 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/products")
-public class ProductController {
+@RequestMapping("/api")
+public class ProductPublicController {
 
 	private final ProductFacade productFacade;
 
 	@GetMapping("/getProduct/{id}")
-	public ResponseEntity<ProductViewModel> getProduct(@PathVariable Long id) {
+	public ResponseEntity<ProductViewModel> getProduct(@Valid @NotNull @PathVariable Long id) {
 		var productViewModel = productFacade.getProduct(id);
 		return ResponseEntity.ok(productViewModel);
 	}
@@ -37,26 +39,26 @@ public class ProductController {
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
 
-		var pageable = PageRequest.of(page, size, Sort.by("id").descending());
+		var pageable = PageRequest.of(page, size, Sort.by("productId").descending());
 		var productViewModelPage = productFacade.getProductsByPagination(pageable);
 
 		return ResponseEntity.ok(productViewModelPage);
 	}
 
 	@PostMapping("/addProduct")
-	public ResponseEntity<ProductViewModel> addProduct(@RequestBody ProductCreateCommand productCreateCommand) {
+	public ResponseEntity<ProductViewModel> addProduct(@Valid @RequestBody ProductCreateCommand productCreateCommand) {
 		var productViewModel = productFacade.addProduct(productCreateCommand);
 		return ResponseEntity.ok(productViewModel);
 	}
 
 	@PutMapping("/updateProduct/{id}")
-	public ResponseEntity<ProductViewModel> updateProduct(@PathVariable Long id, @RequestBody ProductUpdateCommand productUpdateCommand) {
+	public ResponseEntity<ProductViewModel> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductUpdateCommand productUpdateCommand) {
 		var productViewModel = productFacade.updateProduct(id, productUpdateCommand);
 		return ResponseEntity.ok(productViewModel);
 	}
 
 	@DeleteMapping("/deleteProduct/{id}")
-	public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+	public ResponseEntity<Void> deleteProduct(@Valid @NotNull @PathVariable Long id) {
 		productFacade.deleteProduct(id);
 		return ResponseEntity.noContent().build();
 	}

@@ -4,8 +4,10 @@ import com.commonmodule.dto.product.ProductViewModel;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,52 +19,58 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "orders")
 @Getter @Builder(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Order {
 
 	@Id
-	@GeneratedValue
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long orderId;
 
 	private Long orderPrice;  // 주문금액
 
 	@Default
-	@OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST)
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
 	private List<OrderItem> orderItems = new ArrayList<>();
 
-	public static Order createOrder(List<ProductViewModel> products, Map<Long, Long> productsToOrderQuantity) {
+	public void setOrderItems(List<OrderItem> orderItemEntities) {
+		this.orderItems = orderItemEntities;
+	}
+
+	public static Order createOrder(Map<ProductViewModel, Long> productToOderQuantity) {
 
 		var order = Order.builder()
-				.orderPrice(calculateOrderPrice(products, productsToOrderQuantity))
+				.orderPrice(calculateOrderPrice(productToOderQuantity))
 				.build();
 
-		var orderItems = products.stream()
-				.filter(product -> productsToOrderQuantity.containsKey(product.id()))
-				.map(product -> OrderItem.builder()
+		var orderItems = productToOderQuantity.entrySet().stream()
+				.map(entry -> OrderItem.builder()
 						.order(order)
-						.itemId(product.id())
-						.itemName(product.name())
-						.itemUnitPrice(product.price())
-						.orderQuantity(productsToOrderQuantity.get(product.id()))
+						.productId(entry.getKey().productId())
+						.itemName(entry.getKey().name())
+						.itemUnitPrice(entry.getKey().price())
+						.orderQuantity(entry.getValue())
 						.build()
 				)
 				.toList();
 
-		order.setOrderItemEntities(orderItems);
+		order.setOrderItems(orderItems);
 
 		return order;
 	}
 
-	public static Long calculateOrderPrice(List<ProductViewModel> itemEntities, Map<Long, Long> itemIdToOrderQuantity) {
-		return itemEntities.stream()
-				.mapToLong(item -> item.price() * itemIdToOrderQuantity.getOrDefault(item.id(), 0L))
+	private static Long calculateOrderPrice(Map<ProductViewModel, Long> productToOderQuantity) {
+		return productToOderQuantity.entrySet()
+				.stream()
+				.mapToLong(entry -> entry.getKey().price() * entry.getValue())
 				.sum();
 	}
 
-	public void setOrderItemEntities(List<OrderItem> orderItemEntities) {
-		this.orderItems = orderItemEntities;
+	public void applyOrderPrice() {
+		this.orderPrice = this.orderItems.stream()
+				.mapToLong(item -> item.getItemUnitPrice() * item.getOrderQuantity())
+				.sum();
 	}
-
 }

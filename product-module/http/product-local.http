@@ -1,0 +1,19 @@
+
+### 상품 일괄 조회
+GET http://localhost:8080/local/getProducts/1,2,3
+Accept: application/json
+
+
+
+### 상품 재고 조정
+PUT http://localhost:8080/local/adjustStock
+Accept: application/json
+Content-Type: application/json
+
+{
+  "productIdToAdjustStock": {
+    "1": 5,
+    "2": -3,
+    "3": 10
+  }
+}

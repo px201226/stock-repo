@@ -1,0 +1,47 @@
+
+### 주문 다건 조회
+GET http://localhost:8081/api/getOrders/18,19,20
+Accept: application/json
+
+### 주문 단건 조회
+GET http://localhost:8081/api/getOrder/7
+Accept: application/json
+
+### 주문 생성
+POST http://localhost:8081/api/orderProduct
+Content-Type: application/json
+
+{
+  "orderItemCreates": [
+    {
+      "productId": 2,
+      "orderQuantity": 1
+    },
+    {
+      "productId": 3,
+      "orderQuantity": 1
+    }
+  ]
+}
+
+### 주문 삭제
+DELETE http://localhost:8081/api/deleteOrder/17
+Accept: application/json
+
+
+### 주문 변경
+PUT http://localhost:8081/api/changeOrder/23
+Content-Type: application/json
+
+{
+  "orderItemUpdates": [
+    {
+      "orderItemId": 45,
+      "orderQuantity": 5
+    },
+    {
+      "orderItemId": 46,
+      "orderQuantity": 5
+    }
+  ]
+}

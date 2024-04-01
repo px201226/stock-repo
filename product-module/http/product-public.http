@@ -1,0 +1,49 @@
+
+
+### 상품 단건 조회
+GET http://localhost:8080/api/getProduct/2
+Accept: application/json
+
+
+### 상품 페이징 조회
+GET http://localhost:8080/api/getProductsByPagination?page=1&size=5
+Accept: application/json
+
+
+### 상품 업데이트
+PUT http://localhost:8080/api/updateProduct/2
+Content-Type: application/json
+
+{
+  "name": "modify Product",
+  "price": 99880,
+  "stockQuantity": 800
+}
+
+
+### 상품 삭제
+DELETE http://localhost:8080/api/deleteProduct/1
+Content-Type: application/json
+
+
+### 상품 추가
+POST http://localhost:8080/api/addProduct
+Content-Type: application/json
+
+{
+  "name": "new Product",
+  "price": 99880,
+  "stockQuantity": 800
+}
+
+
+
+### 상품 업데이트(잘못된 요청)
+PUT http://localhost:8080/api/updateProduct/1
+Content-Type: application/json
+
+{
+  "name": "",
+  "price": null,
+  "stockQuantity": null
+}
