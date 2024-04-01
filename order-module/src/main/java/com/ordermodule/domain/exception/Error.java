@@ -7,7 +7,8 @@ public enum Error {
 
 	NOT_FOUND_ENTITY("1000", "리소스를 찾을 수 없습니다."),
 	INVALID_REQUEST("1001", "잘못된 요청입니다."),
-	INTERNAL_ERROR("9999", "알 수 없는 에러입니다.");
+	TIMEOUT_ERROR("9998", "네트워크 통신에 실패하였습니다."),
+	UNKNOWN_ERROR("9999", "알 수 없는 에러입니다.");
 
 
 	private String errorCode;

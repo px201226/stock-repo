@@ -37,7 +37,15 @@ public class ProductRepositoryImpl implements ProductRepository {
 		return productJpaRepository.findAllById(productIds);
 	}
 
-	@Override public List<Product> findAllByIdLock(Collection<Long> productIds) {
+	@Override public List<Product> findAllByIdForShared(Collection<Long> productIds) {
+		return productJpaRepository.findByIdForShared(productIds);
+	}
+
+	@Override public List<Product> findAllByIdForUpdate(Collection<Long> productIds) {
 		return productJpaRepository.findAllByIdForUpdate(productIds);
+	}
+
+	@Override public Product findByIdForUpdate(Long productId) {
+		return productJpaRepository.findByIdForUpdate(productId);
 	}
 }

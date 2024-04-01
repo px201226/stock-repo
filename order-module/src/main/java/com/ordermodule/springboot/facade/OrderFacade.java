@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class OrderFacade {
 
 		// 재소 차감
 		var adjustStockCommand = new AdjustStockCommand(productIdToOrderQuantity);
-		productClient.adjustStock(adjustStockCommand.decrease());
+		productClient.adjustStock(UUID.randomUUID(), adjustStockCommand.decrease());
 
 		// 주문 생성
 		try {
@@ -66,7 +67,7 @@ public class OrderFacade {
 			return orderMapper.toOrderViewModel(order);
 
 		} catch (Exception e) {
-			productClient.adjustStock(adjustStockCommand.reverse());
+			productClient.adjustStock(UUID.randomUUID(), adjustStockCommand.reverse());
 			throw new RuntimeException(e);
 		}
 
@@ -88,7 +89,7 @@ public class OrderFacade {
 		Map<Long, Long> productIdToQuantityDifferences = calculateQuantityDifferences(order, orderViewModel);
 
 		// product 재고 조정 호출
-		productClient.adjustStock(new AdjustStockCommand(productIdToQuantityDifferences));
+		productClient.adjustStock(UUID.randomUUID(), new AdjustStockCommand(productIdToQuantityDifferences));
 
 		return orderMapper.toOrderViewModel(order);
 	}
@@ -105,7 +106,7 @@ public class OrderFacade {
 				);
 
 		// 재고 증가
-		productClient.adjustStock(new AdjustStockCommand(productIdToOrderQuantity));
+		productClient.adjustStock(UUID.randomUUID(), new AdjustStockCommand(productIdToOrderQuantity));
 
 	}
 

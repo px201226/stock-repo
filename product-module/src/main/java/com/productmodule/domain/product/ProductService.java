@@ -37,7 +37,7 @@ public class ProductService {
 
 	@Transactional
 	public Product updateProduct(final Long id, final ProductUpdateCommand command) {
-		var product = this.findById(id);
+		var product = productRepository.findByIdForUpdate(id);
 		product.update(command);
 		return product;
 	}
@@ -49,7 +49,7 @@ public class ProductService {
 	}
 
 	public List<Product> getProducts(Collection<Long> productIds) {
-		return productRepository.findAllById(productIds);
+		return productRepository.findAllByIdForShared(productIds);
 	}
 
 
@@ -58,7 +58,7 @@ public class ProductService {
 
 		Set<Long> soldOutProductId = new HashSet<>();
 
-		var products = productRepository.findAllByIdLock(command.productIdToAdjustStock().keySet());
+		var products = productRepository.findAllByIdForUpdate(command.productIdToAdjustStock().keySet());
 
 		for (Product product : products) {
 			var adjustQty = command.productIdToAdjustStock().getOrDefault(product.getProductId(), 0L);

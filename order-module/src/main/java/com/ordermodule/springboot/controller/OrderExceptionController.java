@@ -8,6 +8,7 @@ import com.ordermodule.domain.exception.Error;
 import com.ordermodule.domain.exception.NetworkException;
 import com.ordermodule.springboot.dto.ErrorResponse;
 import com.sun.net.httpserver.HttpServer;
+import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
@@ -32,6 +34,24 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class OrderExceptionController {
 
 	private final ObjectMapper objectMapper;
+
+	@ExceptionHandler(ResourceAccessException.class)
+	public ResponseEntity<ErrorResponse> handleResourceAccessException(ResourceAccessException exception) {
+		log.error("occurred exception", exception);
+
+		if (exception.getCause() instanceof SocketTimeoutException) {
+			var errorResponse = new ErrorResponse(
+					Error.TIMEOUT_ERROR.getErrorCode(),
+					Error.TIMEOUT_ERROR.getMessage(),
+					LocalDateTime.now(),
+					Collections.EMPTY_MAP
+			);
+
+			return ResponseEntity.internalServerError().body(errorResponse);
+		}
+
+		return ResponseEntity.internalServerError().body(ErrorResponse.unknownError());
+	}
 
 	@ExceptionHandler(NetworkException.class)
 	public ResponseEntity<Object> handleNetworkException(NetworkException exception) throws JsonProcessingException {
@@ -45,15 +65,7 @@ public class OrderExceptionController {
 					.body(objectMapper.readValue(httpException.getResponseBodyAsString(), Map.class));
 		}
 
-
-		var errorResponse = new ErrorResponse(
-				Error.INTERNAL_ERROR.getErrorCode(),
-				Error.INTERNAL_ERROR.getMessage(),
-				LocalDateTime.now(),
-				Collections.EMPTY_MAP
-		);
-
-		return ResponseEntity.internalServerError().body(errorResponse);
+		return ResponseEntity.internalServerError().body(ErrorResponse.unknownError());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

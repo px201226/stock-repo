@@ -18,5 +18,9 @@ public interface ProductRepository {
 
 	List<Product> findAllById(Collection<Long> productIds);
 
-	List<Product> findAllByIdLock(Collection<Long> productIds);
+	List<Product> findAllByIdForShared(Collection<Long> productIds);
+
+	List<Product> findAllByIdForUpdate(Collection<Long> productIds);
+
+	Product findByIdForUpdate(Long productId);
 }

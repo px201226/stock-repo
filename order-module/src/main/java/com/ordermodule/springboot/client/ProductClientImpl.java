@@ -1,24 +1,22 @@
 package com.ordermodule.springboot.client;
 
 import com.commonmodule.dto.product.AdjustStockCommand;
-import com.commonmodule.dto.product.DecreaseStockCommand;
 import com.commonmodule.dto.product.ProductViewModel;
 import com.ordermodule.domain.exception.NetworkException;
 import com.ordermodule.domain.order.ProductClient;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
@@ -55,14 +53,13 @@ public class ProductClientImpl implements ProductClient {
 			);
 
 			return exchange.getBody();
-		} catch (Exception e) {
+		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			throw new NetworkException(e);
 		}
 	}
 
 
-
-	@Override public void adjustStock(AdjustStockCommand command) {
+	@Override public void adjustStock(UUID uuid, AdjustStockCommand command) {
 		var uri = UriComponentsBuilder.newInstance()
 				.scheme("http")
 				.host(PRODUCT_SERVICE_HOST)
@@ -71,11 +68,14 @@ public class ProductClientImpl implements ProductClient {
 				.build()
 				.toUri();
 
-		var requestEntity = RequestEntity.put(uri).body(command);
+		var requestEntity = RequestEntity
+				.put(uri)
+				.header("Idempotency-Key", uuid.toString())
+				.body(command);
 
 		try {
 			restTemplate.exchange(requestEntity, String.class);
-		} catch (Exception e) {
+		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			throw new NetworkException(e);
 		}
 	}
