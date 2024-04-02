@@ -22,6 +22,6 @@ public class MessageProducer {
         messageProperties.setHeader("Idempotency-Key", uuid.toString());
         Message message = converter.toMessage(adjustStockCommand, messageProperties);
 
-        rabbitTemplate.send("your.exchange.name", "your.routing.key", message);
+        rabbitTemplate.send("stock.exchange", "key", message);
     }
 }

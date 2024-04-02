@@ -20,10 +20,9 @@ spring:
       hibernate:
         default_batch_fetch_size: 100
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    address: "localhost:5672, localhost:5673"
+    username: root
+    password: password
 
 
 client:

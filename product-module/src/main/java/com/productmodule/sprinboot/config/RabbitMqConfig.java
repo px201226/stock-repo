@@ -1,4 +1,4 @@
-package com.ordermodule.springboot.config;
+package com.productmodule.sprinboot.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
