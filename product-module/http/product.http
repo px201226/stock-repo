@@ -68,3 +68,7 @@ Idempotency-Key: 123
     "3": 10
   }
 }
+
+### 상품 락
+GET http://localhost:8080/local/lock/1,2,3?time=100
+Accept: application/json

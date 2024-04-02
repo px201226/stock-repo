@@ -48,6 +48,7 @@ public class ProductService {
 		productRepository.delete(product);
 	}
 
+	@Transactional(readOnly = true)
 	public List<Product> getProducts(Collection<Long> productIds) {
 		return productRepository.findAllByIdForShared(productIds);
 	}

@@ -33,6 +33,14 @@ public class OrderItem {
 
 
 	public void changeOrderQuantity(Long newQuantity) {
-		this.orderQuantity = newQuantity;
+		if (newQuantity != null) {
+			this.orderQuantity = newQuantity;
+		}
+	}
+
+	public void changeItemUnitPrice(Long price) {
+		if (price != null) {
+			this.itemUnitPrice = price;
+		}
 	}
 }

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -21,7 +22,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
-public class ProductClientImpl implements ProductClient {
+public class ProductApiClientImpl implements ProductClient {
 
 	@Value("${client.product-service.host}")
 	private String PRODUCT_SERVICE_HOST;
@@ -74,7 +75,7 @@ public class ProductClientImpl implements ProductClient {
 				.body(command);
 
 		try {
-			restTemplate.exchange(requestEntity, String.class);
+			var exchange = restTemplate.exchange(requestEntity, String.class);
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			throw new NetworkException(e);
 		}

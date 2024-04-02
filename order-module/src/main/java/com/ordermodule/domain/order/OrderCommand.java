@@ -36,7 +36,7 @@ public record OrderCommand() {
 	}
 
 	public record OrderItemUpdate(
-			@NotNull Long orderItemId,
+			@NotNull Long productId,
 			@NotNull Long orderQuantity
 	) {
 

@@ -4,8 +4,10 @@ import com.commonmodule.dto.product.AdjustStockCommand;
 import com.commonmodule.dto.product.DecreaseStockCommand;
 import com.commonmodule.dto.product.ProductViewModel;
 import com.productmodule.domain.idempotency.IdempotencyService;
+import com.productmodule.domain.product.Product;
 import com.productmodule.domain.product.ProductCommand.ProductCreateCommand;
 import com.productmodule.domain.product.ProductCommand.ProductUpdateCommand;
+import com.productmodule.domain.product.ProductRepository;
 import com.productmodule.sprinboot.facade.ProductFacade;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +41,9 @@ public class ProductLocalController {
 
 	private final ProductFacade productFacade;
 	private final IdempotencyService idempotencyService;
+
+
+	private final ProductRepository productRepository;
 
 	@GetMapping("/getProducts/{productIds}")
 	public ResponseEntity<List<ProductViewModel>> getProducts(@PathVariable Set<Long> productIds) {
@@ -60,6 +66,14 @@ public class ProductLocalController {
 		idempotencyService.put(idempotencyKey, "");
 
 		return new ResponseEntity<Void>(HttpStatus.ACCEPTED);
+	}
+
+	@GetMapping("/lock/{productIds}")
+	@Transactional
+	public void lock(@PathVariable Set<Long> productIds, @RequestParam("time") Long timeSec) throws InterruptedException {
+		var allByIdForUpdate = productRepository.findAllByIdForUpdate(productIds);
+
+		Thread.sleep(timeSec * 1000L);
 	}
 
 }

@@ -3,10 +3,12 @@ package com.ordermodule.springboot.facade;
 import com.commonmodule.dto.product.AdjustStockCommand;
 import com.ordermodule.domain.order.Order;
 import com.ordermodule.domain.order.OrderCommand.OrderCreateCommand;
+import com.ordermodule.domain.order.OrderCommand.OrderItemUpdate;
 import com.ordermodule.domain.order.OrderCommand.OrderUpdateCommand;
 import com.ordermodule.domain.order.OrderItem;
 import com.ordermodule.domain.order.OrderService;
 import com.ordermodule.domain.order.ProductClient;
+import com.ordermodule.springboot.client.ProductMessageProducer;
 import com.ordermodule.springboot.dto.OrderViewModel;
 import com.ordermodule.springboot.dto.OrderViewModel.OrderItemViewModel;
 import com.ordermodule.springboot.mapper.OrderMapper;
@@ -18,8 +20,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
@@ -27,6 +31,7 @@ public class OrderFacade {
 	private final OrderService orderService;
 	private final OrderMapper orderMapper;
 	private final ProductClient productClient;
+	private final ProductMessageProducer productMessageProducer;
 
 	public List<OrderViewModel> getOrders(Collection<Long> orderIds) {
 		var orders = orderService.getOrders(orderIds);
@@ -67,8 +72,9 @@ public class OrderFacade {
 			return orderMapper.toOrderViewModel(order);
 
 		} catch (Exception e) {
-			productClient.adjustStock(UUID.randomUUID(), adjustStockCommand.reverse());
-			throw new RuntimeException(e);
+			log.error("failed placeOrder");
+			productMessageProducer.sendMessage(UUID.randomUUID(), adjustStockCommand.reverse());
+			throw e;
 		}
 
 	}
@@ -82,16 +88,26 @@ public class OrderFacade {
 		// 기존 주문 상태 조회
 		OrderViewModel orderViewModel = this.getOrderById(orderId);
 
-		// 주문 변경
-		Order order = orderService.changeOrder(orderId, command);
-
 		// 재고 조정값 계산
-		Map<Long, Long> productIdToQuantityDifferences = calculateQuantityDifferences(order, orderViewModel);
+		Map<Long, Long> productIdToQuantityDifferences = calculateQuantityDifferences(command, orderViewModel);
 
 		// product 재고 조정 호출
-		productClient.adjustStock(UUID.randomUUID(), new AdjustStockCommand(productIdToQuantityDifferences));
+		var adjustStockCommand = new AdjustStockCommand(productIdToQuantityDifferences);
+		productClient.adjustStock(UUID.randomUUID(), adjustStockCommand);
 
-		return orderMapper.toOrderViewModel(order);
+		// 상품 정보 가져오기
+		var productViewModels = productClient.findAllById(productIdToQuantityDifferences.keySet());
+
+		// 주문 변경
+		try {
+			Order order = orderService.changeOrder(orderId, command, productViewModels);
+			return orderMapper.toOrderViewModel(order);
+
+		} catch (Exception e){
+			log.error("failed changeOrder");
+			productMessageProducer.sendMessage(UUID.randomUUID(), adjustStockCommand.reverse());
+			throw e;
+		}
 	}
 
 
@@ -106,27 +122,27 @@ public class OrderFacade {
 				);
 
 		// 재고 증가
-		productClient.adjustStock(UUID.randomUUID(), new AdjustStockCommand(productIdToOrderQuantity));
+		productMessageProducer.sendMessage(UUID.randomUUID(), new AdjustStockCommand(productIdToOrderQuantity));
 
 	}
 
 
-	private Map<Long, Long> calculateQuantityDifferences(Order order, OrderViewModel orderViewModel) {
+	private Map<Long, Long> calculateQuantityDifferences(OrderUpdateCommand command, OrderViewModel orderViewModel) {
 
 		Map<Long, Long> existingQuantities = orderViewModel.orderItemViewModels().stream()
 				.collect(Collectors.toMap(OrderItemViewModel::productId, OrderItemViewModel::orderQuantity));
 
-		Map<Long, Long> updatedQuantities = order.getOrderItems().stream()
-				.collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getOrderQuantity));
+		Map<Long, Long> updatedQuantities = command.orderItemUpdates().stream()
+				.collect(Collectors.toMap(OrderItemUpdate::productId, OrderItemUpdate::orderQuantity));
 
 		// 최종적으로 계산된 상품별 수량 차이를 저장할 맵
 		Map<Long, Long> quantityDifferences = new HashMap<>();
 
 		// 변경된 주문 항목을 기준으로 수량 차이 계산
-		updatedQuantities.forEach((itemId, updatedQuantity) -> {
-			Long existingQuantity = existingQuantities.getOrDefault(itemId, 0L);
+		updatedQuantities.forEach((productId, updatedQuantity) -> {
+			Long existingQuantity = existingQuantities.getOrDefault(productId, 0L);
 			long quantityDifference = existingQuantity - updatedQuantity;
-			quantityDifferences.put(itemId, quantityDifference);
+			quantityDifferences.put(productId, quantityDifference);
 		});
 
 		return quantityDifferences;

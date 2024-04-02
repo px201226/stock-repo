@@ -52,39 +52,43 @@ public class OrderService {
 		var order = orderRepository.findById(orderId)
 				.orElseThrow();
 
-		// 요청된 모든 주문 항목 ID를 추출
-		Set<Long> requestedOrderItemIds = command.orderItemUpdates().stream()
-				.map(OrderItemUpdate::orderItemId)
+		// 요청된 모든 상품 ID를 추출
+		Set<Long> requestedProductIds = command.orderItemUpdates().stream()
+				.map(OrderItemUpdate::productId)
 				.collect(Collectors.toSet());
 
-		// 주문에 실제로 존재하는 주문 항목 ID 추출
-		Set<Long> existingOrderItemIds = order.getOrderItems().stream()
-				.map(OrderItem::getOrderItemId)
+		// 주문에 실제로 존재하는 상품 ID 추출
+		Set<Long> existingProductIds = order.getOrderItems().stream()
+				.map(OrderItem::getProductId)
 				.collect(Collectors.toSet());
 
-		// 존재하지 않는 주문 항목 ID를 찾음
-		Set<Long> notFoundOrderItemIds = requestedOrderItemIds.stream()
-				.filter(id -> !existingOrderItemIds.contains(id))
+		// 존재하지 않는 상품 ID를 찾음
+		Set<Long> notFoundProductIds = requestedProductIds.stream()
+				.filter(id -> !existingProductIds.contains(id))
 				.collect(Collectors.toSet());
 
-		if (!notFoundOrderItemIds.isEmpty()) {
-			throw BusinessException.of(Error.NOT_FOUND_ENTITY, Map.of("orderItemId", notFoundOrderItemIds));
+		if (!notFoundProductIds.isEmpty()) {
+			throw BusinessException.of(Error.NOT_FOUND_ENTITY, Map.of("productId", notFoundProductIds));
 		}
 
 	}
 
 	@Transactional
-	public Order changeOrder(Long orderId, OrderUpdateCommand command) {
+	public Order changeOrder(Long orderId, OrderUpdateCommand command, List<ProductViewModel> productViewModels) {
 
 		var order = getOrderById(orderId);
 
-		Map<Long, Long> orderItemIdToNewQuantity = command.orderItemUpdates().stream()
-				.collect(Collectors.toMap(OrderItemUpdate::orderItemId, OrderItemUpdate::orderQuantity));
+		var productIdToNewQuantity = command.orderItemUpdates().stream()
+				.collect(Collectors.toMap(OrderItemUpdate::productId, OrderItemUpdate::orderQuantity));
+
+		var productIdToPrice = productViewModels.stream()
+				.collect(Collectors.toMap(ProductViewModel::productId, ProductViewModel::price));
 
 		order.getOrderItems().forEach(orderItem -> {
-			Long newQuantity = orderItemIdToNewQuantity.get(orderItem.getOrderItemId());
+			Long newQuantity = productIdToNewQuantity.get(orderItem.getProductId());
 			if (newQuantity != null) {
 				orderItem.changeOrderQuantity(newQuantity);
+				orderItem.changeItemUnitPrice(productIdToPrice.get(orderItem.getProductId()));
 			}
 		});
 

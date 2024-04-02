@@ -33,6 +33,7 @@ END $$
 
 DELIMITER ;
 
+
 CREATE TABLE `orders` (
                        order_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        order_price BIGINT
@@ -52,10 +53,7 @@ CREATE TABLE `order_item` (
 
 
 docker exec whatap_rabbitmq1_1 rabbitmq-plugins enable rabbitmq_management
-
-
 docker exec whatap_rabbitmq2_1 rabbitmq-plugins enable rabbitmq_management
-
 
 docker exec whatap_rabbitmq2_1 rabbitmqctl stop_app
 docker exec whatap_rabbitmq2_1 rabbitmqctl reset
